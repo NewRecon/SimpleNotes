@@ -3,7 +3,6 @@
 #include "Plus.h"
 #include "Trash.h"
 #include <iostream>
-#include <memory>
 class SimpleNotes
 {
 private:
@@ -13,12 +12,16 @@ private:
 	Plus plus;
 	Trash trash;
 	Sticker* stickers = nullptr;
+	int stickerCounter = 0;
 	void evenState();
 	void update();
 	void render();
 	bool setTransparency(HWND hWnd, unsigned char alpha);
+	void addSticker();
+
+	sf::Texture texture;
 public:
 	SimpleNotes();
+	~SimpleNotes();
 	void run();
-	void addSticker();
 };

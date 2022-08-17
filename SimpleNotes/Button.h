@@ -5,8 +5,8 @@ class Button
 {
 protected:
 	sf::Rect<float>* rect;
-	std::string text;
-	sf::Font font;
+	//std::string text;
+	//sf::Font font;
 	float radius;
 	int positionX;
 	int positionY;
