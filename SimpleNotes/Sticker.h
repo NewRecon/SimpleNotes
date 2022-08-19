@@ -12,6 +12,7 @@ private:
 	std::string path;
 	sf::RectangleShape sticker;
 	sf::Color color;
+	sf::Color outLineColor;
 	sf::Texture texture;
 public:
 	Sticker(){}
@@ -22,4 +23,6 @@ public:
 	bool contain(sf::Vector2i coord);
 	sf::Rect<float> getRect();
 	void setPosition(int x, int y);
+	void setPosition(sf::Vector2i);
+	sf::Vector2i getPosition();
 };

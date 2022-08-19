@@ -11,6 +11,10 @@ Sticker::Sticker(int positionX, int positionY)
 	sticker.setTexture(&texture);
 	color = sf::Color::Yellow;
 	sticker.setFillColor(color);
+	this->sticker.setOutlineThickness(2);
+	outLineColor = color;
+	outLineColor.g = outLineColor.g - 50;
+	this->sticker.setOutlineColor(outLineColor);
 }
 
 void Sticker::create()
@@ -42,4 +46,20 @@ void Sticker::setPosition(int x, int y)
 	positionX = x;
 	positionY = y;
 	sticker.setPosition(sf::Vector2f(positionX, positionY));
+	rect->left = x;
+	rect->top = y;
+}
+
+void Sticker::setPosition(sf::Vector2i vector)
+{
+	positionX = vector.x;
+	positionY = vector.y;
+	sticker.setPosition(sf::Vector2f(positionX, positionY));
+	rect->left = vector.x;
+	rect->top = vector.y;
+}
+
+sf::Vector2i Sticker::getPosition()
+{
+	return sf::Vector2i(positionX, positionY);
 }
