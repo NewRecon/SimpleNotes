@@ -18,9 +18,8 @@ private:
 	void render();
 	bool setTransparency(HWND hWnd, unsigned char alpha);
 	void addSticker();
-	void deleteSticker();
-
-	sf::Texture texture;
+	void deleteSticker(int id);
+	void edit(int id);
 public:
 	SimpleNotes();
 	~SimpleNotes();

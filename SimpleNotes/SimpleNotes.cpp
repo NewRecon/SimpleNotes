@@ -11,6 +11,7 @@ void SimpleNotes::evenState()
 		//LMB
 		if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 		{
+			sf::Cursor cursor;
 			if (plus.contain(sf::Mouse::getPosition(window)))
 			{
 				if (stickerCounter < 9)
@@ -21,16 +22,32 @@ void SimpleNotes::evenState()
 			}
 
 			// Удаление при нажатии на корзину и стикер
-			//if (trash.contain(sf::Mouse::getPosition(window)))
-			//{
-			//	std::cout << "-" << std::endl;
-			//	bool del = true;
-			//	while (del)
-			//	{
-			//		std::cout << "del";
-			//		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) del = false;
-			//	}
-			//}
+			if (trash.contain(sf::Mouse::getPosition(window)))
+			{
+				bool del = true; 
+				cursor.loadFromSystem(sf::Cursor::Hand);
+				window.setMouseCursor(cursor);
+				while (del)
+				{
+					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape) ||
+						sf::Mouse::isButtonPressed(sf::Mouse::Right)) del = false;
+					if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+					{
+						for (int i = 0; i < stickerCounter; i++)
+						{
+							if (stickers[i].contain(sf::Mouse::getPosition(window)))
+							{
+								std::cout << i << std::endl;
+								//deleteSticker(i);
+								del = false;
+							}
+						}
+						while (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {}
+					}
+				}
+				cursor.loadFromSystem(sf::Cursor::Arrow);
+				window.setMouseCursor(cursor);
+			}
 			for (int i = 0; i < stickerCounter; i++)
 			{
 				if (stickers[i].contain(sf::Mouse::getPosition(window)))
@@ -38,12 +55,24 @@ void SimpleNotes::evenState()
 					int deltaX = sf::Mouse::getPosition().x - stickers[i].getPosition().x;
 					int deltaY = sf::Mouse::getPosition().y - stickers[i].getPosition().y;
 
+					int x = sf::Mouse::getPosition().x;
+					int y = sf::Mouse::getPosition().y;
+
 					while (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 					{
+						cursor.loadFromSystem(sf::Cursor::Hand);
+						window.setMouseCursor(cursor);
 						stickers[i].setPosition(
 							sf::Mouse::getPosition().x - deltaX,
 							sf::Mouse::getPosition().y - deltaY);
 						render();
+					}
+					cursor.loadFromSystem(sf::Cursor::Arrow);
+					window.setMouseCursor(cursor);
+					if (sf::Mouse::getPosition().x == x &&
+						sf::Mouse::getPosition().y == y)
+					{
+						edit(i);
 					}
 					break;
 				}
@@ -95,11 +124,9 @@ bool SimpleNotes::setTransparency(HWND hWnd, unsigned char alpha)
 void SimpleNotes::addSticker()
 {
 	int posX=10, posY=10;
-	Sticker sticker(posX, posY);
-
-	//texture.loadFromFile("..\\textures\\png-clipart-yellow-sticky-note-post-it-note-paper-drawing-pin-post-rectangle-pin.png");
-	//sticker.getSticker().setTexture(&texture);
-
+	Sticker sticker(posX, posY, stickerCounter);
+	
+	// Поправить
 	
 	if (stickerCounter > 0)
 	{
@@ -137,9 +164,14 @@ void SimpleNotes::addSticker()
 	stickers = buf;
 }
 
-void SimpleNotes::deleteSticker()
+void SimpleNotes::deleteSticker(int id)
 {
 
+}
+
+void SimpleNotes::edit(int id)
+{
+	stickers[id].edit();
 }
 
 SimpleNotes::SimpleNotes() : window(sf::VideoMode(400, 600), "Simpe notes", sf::Style::Close)

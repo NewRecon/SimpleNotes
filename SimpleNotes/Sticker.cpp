@@ -1,6 +1,15 @@
 #include "Sticker.h"
 
-Sticker::Sticker(int positionX, int positionY)
+std::string Sticker::intToStr(int num)
+{
+	std::string str;
+
+
+
+	return str;
+}
+
+Sticker::Sticker(int positionX, int positionY, int id)
 {
 	this->positionX = positionX;
 	this->positionY = positionY;
@@ -15,6 +24,9 @@ Sticker::Sticker(int positionX, int positionY)
 	outLineColor = color;
 	outLineColor.g = outLineColor.g - 50;
 	this->sticker.setOutlineColor(outLineColor);
+	std::string str = "";
+	font.loadFromFile("C:/Windows/Fonts/CascadiaMono.ttf");
+	//path = "..\\data\\" + id + ".txt";
 }
 
 void Sticker::create()
@@ -23,6 +35,69 @@ void Sticker::create()
 
 void Sticker::edit()
 {
+	sf::RenderWindow sticker(sf::VideoMode(300, 300), "", sf::Style::Close);
+	sticker.setFramerateLimit(60);
+	text.setFont(font);
+	text.setCharacterSize(18);
+	text.setPosition(0, 0);
+	text.setFillColor(sf::Color::Black);
+
+	sf::Text carriage;
+	carriage.setFont(font);
+	carriage.setFillColor(sf::Color::Black);
+	carriage.setCharacterSize(text.getCharacterSize());
+
+	std::ofstream out{ path };
+
+	int strSize = 0;
+	int carriageStr = 0;
+	// двумерный массив 14 на 27
+	//int** strSize = new int*;
+	//for (int i=0;i<)
+
+	while (sticker.isOpen())
+	{
+		carriage.setString("");
+		sf::Event event;
+		while (sticker.pollEvent(event))
+		{
+			if (event.key.code == sf::Keyboard::Escape ||
+				event.type == sf::Event::Closed)
+				sticker.close();
+			if (event.type == sf::Event::TextEntered)
+			{
+				if (strSize >= 27)
+				{
+					textStr += "\n";
+					carriageStr += 18;
+					strSize = 0;
+				}
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::BackSpace)) // Delete key
+				{
+					textStr = textStr.substr(0, textStr.size() - 1);
+					strSize--;
+				}
+				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
+				{
+					textStr += "\n";
+					carriageStr += 18;
+					strSize = 0;
+				}
+				else if (event.text.unicode < 128)
+				{
+					textStr += static_cast<char>(event.text.unicode);
+					strSize++;
+				}
+				text.setString(textStr);
+			}
+		}
+		carriage.setPosition(strSize*(text.getCharacterSize()/1.66), carriageStr);
+		if (time(NULL) % 2 == 0) carriage.setString("|");
+		sticker.clear(sf::Color::Yellow);
+		sticker.draw(text);
+		sticker.draw(carriage);
+		sticker.display();
+	}
 }
 
 sf::RectangleShape Sticker::getSticker()
