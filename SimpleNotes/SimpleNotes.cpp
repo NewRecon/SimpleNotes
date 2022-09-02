@@ -14,15 +14,15 @@ void SimpleNotes::evenState()
 			sf::Cursor cursor;
 			if (plus.contain(sf::Mouse::getPosition(window)))
 			{
-				if (stickerCounter < 9)
+				if (stickerCounter < 12)
 				{
-					std::cout << "+" << std::endl;
 					addSticker();
+					addText(stickerCounter-1);
 				}
 			}
 
 			// Удаление при нажатии на корзину и стикер
-			if (trash.contain(sf::Mouse::getPosition(window)))
+			if (trash.contain(sf::Mouse::getPosition(window)) && stickerCounter>0)
 			{
 				bool del = true; 
 				cursor.loadFromSystem(sf::Cursor::Hand);
@@ -30,16 +30,42 @@ void SimpleNotes::evenState()
 				while (del)
 				{
 					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape) ||
-						sf::Mouse::isButtonPressed(sf::Mouse::Right)) del = false;
-					if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+						sf::Mouse::isButtonPressed(sf::Mouse::Right))
+						del = false;
+
+					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift))
 					{
-						for (int i = 0; i < stickerCounter; i++)
+						while (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift))
+						{
+							if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+							{
+								for (int i = stickerCounter - 1; i >= 0; i--)
+								{
+									if (stickers[i].contain(sf::Mouse::getPosition(window)))
+									{
+										deleteSticker(i);
+										delText(i);
+										stickerCounter--;
+										render();
+										break;
+									}
+								}
+							}
+						}
+						del = false;
+					}
+
+					else if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+					{
+						for (int i = stickerCounter-1; i >= 0; i--)
 						{
 							if (stickers[i].contain(sf::Mouse::getPosition(window)))
 							{
-								std::cout << i << std::endl;
-								//deleteSticker(i);
+								deleteSticker(i);
+								delText(i);
+								stickerCounter--;
 								del = false;
+								break;
 							}
 						}
 						while (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {}
@@ -48,33 +74,59 @@ void SimpleNotes::evenState()
 				cursor.loadFromSystem(sf::Cursor::Arrow);
 				window.setMouseCursor(cursor);
 			}
-			for (int i = 0; i < stickerCounter; i++)
+			else if (stickerCounter)
 			{
-				if (stickers[i].contain(sf::Mouse::getPosition(window)))
+				for (int i = stickerCounter-1; i >= 0; i--)
 				{
-					int deltaX = sf::Mouse::getPosition().x - stickers[i].getPosition().x;
-					int deltaY = sf::Mouse::getPosition().y - stickers[i].getPosition().y;
-
-					int x = sf::Mouse::getPosition().x;
-					int y = sf::Mouse::getPosition().y;
-
-					while (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+					if (stickers[i].contain(sf::Mouse::getPosition(window)))
 					{
-						cursor.loadFromSystem(sf::Cursor::Hand);
+						int deltaX = sf::Mouse::getPosition().x - stickers[i].getPosition().x;
+						int deltaY = sf::Mouse::getPosition().y - stickers[i].getPosition().y;
+
+						int x = sf::Mouse::getPosition().x;
+						int y = sf::Mouse::getPosition().y;
+
+						while (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+						{
+							cursor.loadFromSystem(sf::Cursor::Hand);
+							window.setMouseCursor(cursor);
+							stickers[i].setPosition(
+								sf::Mouse::getPosition().x - deltaX,
+								sf::Mouse::getPosition().y - deltaY);
+							stickersText[i].setPosition(
+								(sf::Mouse::getPosition().x - deltaX) + 8,
+								(sf::Mouse::getPosition().y - deltaY) + 2);
+							if (trash.contain(sf::Mouse::getPosition(window)))
+							{
+								trash.setTexture("..\\textures\\1-trash-cat_icon-icons.com_76677.png");
+								trash.setColor(sf::Color(255, 255, 255, 255));
+							}
+							else
+							{
+								trash.setTexture("..\\textures\\Childish-Cross_24996.png");
+								trash.setColor(sf::Color::Red);
+							}
+							render();
+						}
+						cursor.loadFromSystem(sf::Cursor::Arrow);
 						window.setMouseCursor(cursor);
-						stickers[i].setPosition(
-							sf::Mouse::getPosition().x - deltaX,
-							sf::Mouse::getPosition().y - deltaY);
-						render();
+						trash.setTexture("..\\textures\\Childish-Cross_24996.png");
+						trash.setColor(sf::Color::Red);
+						if (trash.contain(sf::Mouse::getPosition(window)))
+						{
+							deleteSticker(i);
+							delText(i);
+							stickerCounter--;
+						}
+						else if (sf::Mouse::getPosition().x == x &&
+							sf::Mouse::getPosition().y == y)
+						{
+							edit(i);
+							// отображение мини текста
+							stickersText[i].setString(stickers[i].getStr());
+						}
+						break;
 					}
-					cursor.loadFromSystem(sf::Cursor::Arrow);
-					window.setMouseCursor(cursor);
-					if (sf::Mouse::getPosition().x == x &&
-						sf::Mouse::getPosition().y == y)
-					{
-						edit(i);
-					}
-					break;
 				}
 			}
 			while (sf::Mouse::isButtonPressed(sf::Mouse::Left)){}
@@ -108,6 +160,7 @@ void SimpleNotes::render()
 	for (int i = 0; i < stickerCounter; i++)
 	{
 		window.draw(stickers[i].getSticker());
+		window.draw(stickersText[i]);
 	}
 	window.draw(plus.getButton());
 	window.draw(trash.getButton());
@@ -126,47 +179,70 @@ void SimpleNotes::addSticker()
 	int posX=10, posY=10;
 	Sticker sticker(posX, posY, stickerCounter);
 	
-	// Поправить
+	bool flag = false;
 	
 	if (stickerCounter > 0)
 	{
-		for (int i = 0; i < stickerCounter; i++)
+		int count = 0;
+		while (count != stickerCounter)
 		{
-			while (sticker.getRect().intersects(stickers[i].getRect()))
+			count = 0;
+			for (int i = 0; i < stickerCounter; i++)
 			{
-				if (sticker.getPosition().x + 120 + 130 < 400)
+				while (sticker.getRect().intersects(stickers[i].getRect()))
 				{
-					posX += 130;
+					count--;
+					if (sticker.getPosition().x + 120 + 130 < 400)
+					{
+						posX += 120;
+					}
+					else if (sticker.getPosition().y + 130 < 600)
+					{
+						posX = 10;
+						posY += 120;
+					}
+					else
+					{
+						flag = true;
+						break;
+					}
+					sticker.setPosition(posX, posY);
 				}
-				else
-				{
-					posX = 10;
-					posY += 130;
-				}
-				for (int y = 0; y < stickerCounter; y++)
-				{
-					sticker.getRect().intersects(stickers[y].getRect());
-				}
-				sticker.setPosition(posX, posY);
+				if (flag) break;
+				count++;
 			}
+			if (flag) break;
 		}
 	}
 
-	if (stickers == nullptr) stickers = new Sticker[stickerCounter];
-	stickerCounter++;
-	Sticker* buf = new Sticker[stickerCounter];
-	for (int i = 0; i < stickerCounter - 1; i++)
+	if (!flag)
 	{
-		buf[i] = stickers[i];
+		if (stickers == nullptr) stickers = new Sticker[stickerCounter];
+		stickerCounter++;
+		Sticker* buf = new Sticker[stickerCounter];
+		for (int i = 0; i < stickerCounter - 1; i++)
+		{
+			buf[i] = stickers[i];
+		}
+		buf[stickerCounter - 1] = sticker;
+		delete[]stickers;
+		stickers = buf;
 	}
-	buf[stickerCounter - 1] = sticker;
-	delete[]stickers;
-	stickers = buf;
 }
 
 void SimpleNotes::deleteSticker(int id)
 {
-
+	Sticker* buf = new Sticker[stickerCounter-1];
+	for (int i = 0; i < id; i++)
+	{
+		buf[i] = stickers[i];
+	}
+	for (int i = id+1, j=id; i < stickerCounter; i++)
+	{
+		buf[j++] = stickers[i];
+	}
+	delete[] stickers;
+	stickers = buf;
 }
 
 void SimpleNotes::edit(int id)
@@ -174,14 +250,52 @@ void SimpleNotes::edit(int id)
 	stickers[id].edit();
 }
 
-SimpleNotes::SimpleNotes() : window(sf::VideoMode(400, 600), "Simpe notes", sf::Style::Close)
+void SimpleNotes::addText(int id)
 {
-	const unsigned char opacity = 150;
+	sf::Text text;
+	text.setPosition(stickers[id].getRect().left, stickers[id].getRect().top);
+	text.setFont(font);
+	text.setCharacterSize(7);
+	text.setString("");
+	text.setFillColor(sf::Color::Black);
+
+	if (stickersText == nullptr)
+		stickersText = new sf::Text[0];
+	sf::Text* buf = new sf::Text[stickerCounter];
+	for (int i = 0; i < stickerCounter - 1; i++)
+	{
+		buf[i] = stickersText[i];
+	}
+	buf[stickerCounter - 1] = text;
+	delete[] stickersText;
+	stickersText = buf;
+}
+
+SimpleNotes::SimpleNotes() : window(sf::VideoMode(400, 600), L"Simpe notes ©NewRecon", sf::Style::Close)
+{
+	const unsigned char opacity = 200;
 	//setTransparency(window.getSystemHandle(), opacity);
 	this->background.setSize(sf::Vector2f(400, 600));
-	this->backgroundTexture.loadFromFile("..\\textures\\589cc9be29be415a24740edb.png");
+	this->backgroundTexture.loadFromFile("..\\textures\\kisspng-hardwood-wood-stain-varnish-wall-floor-wood-textures-5a811df69cb278.8835756915184112546418.png");
 	background.setTexture(&backgroundTexture);
 	window.setFramerateLimit(60);
+
+	font.loadFromFile("C:/Windows/Fonts/CascadiaMono.ttf");
+}
+
+void SimpleNotes::delText(int id)
+{
+	sf::Text* buf = new sf::Text[stickerCounter-1];
+	for (int i = 0; i < id; i++)
+	{
+		buf[i] = stickersText[i];
+	}
+	for (int i = id + 1, j = id; i < stickerCounter; i++)
+	{
+		buf[j++] = stickersText[i];
+	}
+	delete[] stickersText;
+	stickersText = buf;
 }
 
 SimpleNotes::~SimpleNotes()

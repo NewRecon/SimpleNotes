@@ -16,17 +16,40 @@ Sticker::Sticker(int positionX, int positionY, int id)
 	sticker.setPosition(sf::Vector2f(positionX, positionY));
 	sticker.setSize(sf::Vector2f(120, 120));
 	rect = new sf::Rect<float>(sticker.getGlobalBounds());
-	texture.loadFromFile("..\\textures\\png-clipart-yellow-sticky-note-post-it-note-paper-drawing-pin-post-rectangle-pin.png");
-	sticker.setTexture(&texture);
 	color = sf::Color::Yellow;
-	sticker.setFillColor(color);
-	this->sticker.setOutlineThickness(2);
+	//sticker.setFillColor(color);
+	//this->sticker.setOutlineThickness(2);
 	outLineColor = color;
 	outLineColor.g = outLineColor.g - 50;
-	this->sticker.setOutlineColor(outLineColor);
+	//this->sticker.setOutlineColor(outLineColor);
 	std::string str = "";
 	font.loadFromFile("C:/Windows/Fonts/CascadiaMono.ttf");
 	//path = "..\\data\\" + id + ".txt";
+	this->textureStick.loadFromFile("..\\textures\\5a385d9fb6b233.6968803315136434237483.png");
+	this->sticker.setTexture(&textureStick);
+
+}
+
+Sticker& Sticker::operator=(const Sticker& other)
+{
+	this->rect = other.rect;
+	this->textStr = other.textStr;
+	this->text = other.text;
+	this->font = other.font;
+	this->positionX = other.positionX;
+	this->positionY = other.positionY;
+	this->sticker = other.sticker;
+	this->color = other.color;
+	this->outLineColor = other.outLineColor;
+	this->textureStick = other.textureStick;
+	for (int i = 0; i < 14; i++)
+	{
+		this->strSize[i] = other.strSize[i];
+	}
+	this->str = other.str;
+
+	sticker.setTexture(&textureStick);
+	return *this;
 }
 
 void Sticker::create()
@@ -35,7 +58,7 @@ void Sticker::create()
 
 void Sticker::edit()
 {
-	sf::RenderWindow sticker(sf::VideoMode(300, 300), "", sf::Style::Close);
+	sf::RenderWindow sticker(sf::VideoMode(300, 300), "Sticker", sf::Style::Close);
 	sticker.setFramerateLimit(60);
 	text.setFont(font);
 	text.setCharacterSize(18);
@@ -47,13 +70,11 @@ void Sticker::edit()
 	carriage.setFillColor(sf::Color::Black);
 	carriage.setCharacterSize(text.getCharacterSize());
 
-	std::ofstream out{ path };
+	//std::ofstream out{ path };
 
-	int strSize = 0;
-	int carriageStr = 0;
-	// двумерный массив 14 на 27
-	//int** strSize = new int*;
-	//for (int i=0;i<)
+	int carriageStr = str * 21;
+
+	//номер буквы strSize[str]
 
 	while (sticker.isOpen())
 	{
@@ -66,32 +87,42 @@ void Sticker::edit()
 				sticker.close();
 			if (event.type == sf::Event::TextEntered)
 			{
-				if (strSize >= 27)
+				if (event.text.unicode == 8)
 				{
-					textStr += "\n";
-					carriageStr += 18;
-					strSize = 0;
+					if (str > 0 || strSize[str] > 0)
+					{
+						textStr.erase(textStr.getSize() - 1);
+						if (strSize[str] > 0) strSize[str]--;
+						else str--;
+					}
 				}
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::BackSpace)) // Delete key
+				else if (event.text.unicode == 13)
 				{
-					textStr = textStr.substr(0, textStr.size() - 1);
-					strSize--;
+					if (str < 13)
+					{
+						textStr += "\n";
+						str++;
+					}
 				}
-				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
+				else
 				{
-					textStr += "\n";
-					carriageStr += 18;
-					strSize = 0;
+					if (strSize[str] == 27 && str<13)
+					{
+						textStr += "\n";
+						str++;
+					}
+					if (strSize[str] < 27)
+					{
+						textStr += static_cast<wchar_t>(event.text.unicode);
+						strSize[str]++;
+					}
 				}
-				else if (event.text.unicode < 128)
-				{
-					textStr += static_cast<char>(event.text.unicode);
-					strSize++;
-				}
+
 				text.setString(textStr);
+				carriageStr = str * 21;
 			}
 		}
-		carriage.setPosition(strSize*(text.getCharacterSize()/1.66), carriageStr);
+		carriage.setPosition(strSize[str]*(text.getCharacterSize()/1.66), carriageStr);
 		if (time(NULL) % 2 == 0) carriage.setString("|");
 		sticker.clear(sf::Color::Yellow);
 		sticker.draw(text);
@@ -137,4 +168,14 @@ void Sticker::setPosition(sf::Vector2i vector)
 sf::Vector2i Sticker::getPosition()
 {
 	return sf::Vector2i(positionX, positionY);
+}
+
+sf::Text Sticker::getText()
+{
+	return text;
+}
+
+sf::String Sticker::getStr()
+{
+	return textStr;
 }

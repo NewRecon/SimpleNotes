@@ -7,16 +7,19 @@ protected:
 	sf::Rect<float>* rect;
 	//std::string text;
 	//sf::Font font;
-	float radius;
+	float height;
+	float width;
 	int positionX;
 	int positionY;
 	bool status;
-	sf::CircleShape button;
+	sf::RectangleShape button;
 	sf::Color color;
 	sf::Texture texture;
 public:
 	Button();
 	virtual void push() = 0;
-	sf::CircleShape getButton();
+	sf::RectangleShape getButton();
 	bool contain(sf::Vector2i coord);
+	void setTexture(std::string path);
+	void setColor(sf::Color color);
 };
