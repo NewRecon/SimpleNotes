@@ -16,8 +16,3 @@ Plus::Plus()
 	texture.loadFromFile("..\\textures\\Childish-Plus_24969.png");
 	button.setTexture(&texture);
 }
-
-void Plus::push()
-{
-	
-}

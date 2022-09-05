@@ -16,8 +16,3 @@ Trash::Trash()
 	texture.loadFromFile("..\\textures\\Childish-Cross_24996.png");
 	button.setTexture(&texture);
 }
-
-void Trash::push()
-{
-
-}

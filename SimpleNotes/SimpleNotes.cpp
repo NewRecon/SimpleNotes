@@ -14,10 +14,10 @@ void SimpleNotes::evenState()
 			sf::Cursor cursor;
 			if (plus.contain(sf::Mouse::getPosition(window)))
 			{
-				if (stickerCounter < 12)
+				if (addSticker())
 				{
-					addSticker();
 					addText(stickerCounter-1);
+					std::cout << stickerCounter << std::endl;
 				}
 			}
 
@@ -174,7 +174,7 @@ bool SimpleNotes::setTransparency(HWND hWnd, unsigned char alpha)
 	return true;
 }
 
-void SimpleNotes::addSticker()
+bool SimpleNotes::addSticker()
 {
 	int posX=10, posY=10;
 	Sticker sticker(posX, posY, stickerCounter);
@@ -189,7 +189,9 @@ void SimpleNotes::addSticker()
 			count = 0;
 			for (int i = 0; i < stickerCounter; i++)
 			{
-				while (sticker.getRect().intersects(stickers[i].getRect()))
+				while (sticker.getRect().intersects(stickers[i].getRect()) ||
+					sticker.getRect().intersects(plus.getRect()) ||
+					sticker.getRect().intersects(trash.getRect()))
 				{
 					count--;
 					if (sticker.getPosition().x + 120 + 130 < 400)
@@ -227,7 +229,9 @@ void SimpleNotes::addSticker()
 		buf[stickerCounter - 1] = sticker;
 		delete[]stickers;
 		stickers = buf;
+		return true;
 	}
+	else return false;
 }
 
 void SimpleNotes::deleteSticker(int id)
@@ -271,7 +275,7 @@ void SimpleNotes::addText(int id)
 	stickersText = buf;
 }
 
-SimpleNotes::SimpleNotes() : window(sf::VideoMode(400, 600), L"Simpe notes ©NewRecon", sf::Style::Close)
+SimpleNotes::SimpleNotes() : window(sf::VideoMode(400, 600), L"Simple notes ©NewRecon", sf::Style::Close)
 {
 	const unsigned char opacity = 200;
 	//setTransparency(window.getSystemHandle(), opacity);
@@ -301,6 +305,7 @@ void SimpleNotes::delText(int id)
 SimpleNotes::~SimpleNotes()
 {
 	delete[]stickers;
+	delete[]stickersText;
 }
 
 void SimpleNotes::run()

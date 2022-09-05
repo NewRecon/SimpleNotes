@@ -4,5 +4,4 @@ class Plus : public Button
 {
 public:
 	Plus();
-	void push() override;
 };

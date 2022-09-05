@@ -1,10 +1,5 @@
 #include "Button.h"
 
-Button::Button()
-{
-
-}
-
 sf::RectangleShape Button::getButton()
 {
 	return this->button;
@@ -26,5 +21,10 @@ void Button::setColor(sf::Color color)
 {
 	this->color = color;
 	this->button.setFillColor(color);
+}
+
+sf::Rect<float> Button::getRect()
+{
+	return *rect;
 }
 

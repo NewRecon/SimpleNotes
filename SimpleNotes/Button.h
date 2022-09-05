@@ -16,10 +16,10 @@ protected:
 	sf::Color color;
 	sf::Texture texture;
 public:
-	Button();
-	virtual void push() = 0;
+	Button(){}
 	sf::RectangleShape getButton();
 	bool contain(sf::Vector2i coord);
 	void setTexture(std::string path);
 	void setColor(sf::Color color);
+	sf::Rect<float> getRect();
 };

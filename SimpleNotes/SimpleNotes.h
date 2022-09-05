@@ -3,6 +3,7 @@
 #include "Plus.h"
 #include "Trash.h"
 #include <iostream>
+#include <windows.h>
 class SimpleNotes
 {
 private:
@@ -21,7 +22,7 @@ private:
 	void update();
 	void render();
 	bool setTransparency(HWND hWnd, unsigned char alpha);
-	void addSticker();
+	bool addSticker();
 	void deleteSticker(int id);
 	void edit(int id);
 	void addText(int id);
