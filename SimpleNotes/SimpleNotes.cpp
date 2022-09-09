@@ -6,12 +6,46 @@ void SimpleNotes::evenState()
 	while (window.pollEvent(event))
 	{
 		if (event.type == sf::Event::Closed)
+		{
+			json j;
+			std::ofstream out{ path };
+			j["stickerCounter"] = stickerCounter;
+			out << j << '\n';
+			out.close();
+			j.clear();
+			for (int i = 0; i < stickerCounter; i++)
+			{
+				//çàïèñü êàæäîãî ñòèêåðà â ôàéë
+				stickers[i].save();
+			}
 			window.close();
+		}
+
+		if (menu)
+		{
+			if (contMenu->contain(sf::Mouse::getPosition(window))>=0)
+			{
+				contMenu->setColor(contMenu->contain(sf::Mouse::getPosition(window)), true);
+				for (int i = 0; i < contMenu->getCounter(); i++)
+				{
+					if (i == contMenu->contain(sf::Mouse::getPosition(window))) continue;
+					contMenu->setColor(i, false);
+				}
+			}
+			else
+			{
+				for (int i = 0; i < contMenu->getCounter(); i++)
+				{
+					contMenu->setColor(i, false);
+				}
+			}
+		}
 
 		//LMB
 		if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 		{
 			sf::Cursor cursor;
+
 			if (plus.contain(sf::Mouse::getPosition(window)))
 			{
 				if (addSticker())
@@ -74,6 +108,29 @@ void SimpleNotes::evenState()
 				cursor.loadFromSystem(sf::Cursor::Arrow);
 				window.setMouseCursor(cursor);
 			}
+
+			else if (menu)
+			{
+				switch (contMenu->contain(sf::Mouse::getPosition(window)))
+				{
+				case 0:
+					deleteSticker(contMenu->getId());
+					delText(contMenu->getId());
+					stickerCounter--;
+					break;
+				case 1:
+					edit(contMenu->getId());
+					stickersText[contMenu->getId()].setString(stickers[contMenu->getId()].getStr());
+					break;
+				case 2:
+					stickers[contMenu->getId()].changeColor();
+					break;
+				default:
+					break;
+				}
+				menu = false;
+			}
+
 			else if (stickerCounter)
 			{
 				for (int i = stickerCounter-1; i >= 0; i--)
@@ -94,8 +151,8 @@ void SimpleNotes::evenState()
 								sf::Mouse::getPosition().x - deltaX,
 								sf::Mouse::getPosition().y - deltaY);
 							stickersText[i].setPosition(
-								(sf::Mouse::getPosition().x - deltaX) + 8,
-								(sf::Mouse::getPosition().y - deltaY) + 2);
+								(sf::Mouse::getPosition().x - deltaX) + 16,
+								(sf::Mouse::getPosition().y - deltaY) + 5);
 							if (trash.contain(sf::Mouse::getPosition(window)))
 							{
 								trash.setTexture("..\\textures\\1-trash-cat_icon-icons.com_76677.png");
@@ -135,22 +192,21 @@ void SimpleNotes::evenState()
 		//RMB
 		if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
 		{
-			for (int i = 0; i < stickerCounter; i++)
+			sf::Vector2i vector = sf::Mouse::getPosition(window);
+			for (int i = stickerCounter - 1; i >= 0; i--)
 			{
-				if (stickers[i].contain(sf::Mouse::getPosition(window)))
+				if (stickers[i].contain(vector))
 				{
-					std::cout << "del" << std::endl;
+					if (contMenu == nullptr) contMenu = new ContextMenu(vector, i);
+					else contMenu->setPos(vector, i);
+					menu = true;
+					break;
 				}
+				else menu = false;
 			}
-
 			while (sf::Mouse::isButtonPressed(sf::Mouse::Right)) {}
 		}
 	}
-}
-
-void SimpleNotes::update()
-{
-	
 }
 
 void SimpleNotes::render()
@@ -164,19 +220,21 @@ void SimpleNotes::render()
 	}
 	window.draw(plus.getButton());
 	window.draw(trash.getButton());
+	if (menu)
+	{
+		window.draw(contMenu->getMenu());
+		for (int i = 0; i < contMenu->getCounter(); i++)
+		{
+			window.draw(*(contMenu->getShape() + i));
+			window.draw(*(contMenu->getText() + i));
+		}
+	}
 	window.display();
-}
-
-bool SimpleNotes::setTransparency(HWND hWnd, unsigned char alpha)
-{
-	SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
-	SetLayeredWindowAttributes(hWnd, 0, alpha, LWA_ALPHA);
-	return true;
 }
 
 bool SimpleNotes::addSticker()
 {
-	int posX=10, posY=10;
+	int posX=-5, posY=0;
 	Sticker sticker(posX, posY, stickerCounter);
 	
 	bool flag = false;
@@ -194,14 +252,14 @@ bool SimpleNotes::addSticker()
 					sticker.getRect().intersects(trash.getRect()))
 				{
 					count--;
-					if (sticker.getPosition().x + 120 + 130 < 400)
+					if (sticker.getPosition().x + 160 + 160 <= 480)
 					{
-						posX += 120;
+						posX += 160;
 					}
-					else if (sticker.getPosition().y + 130 < 600)
+					else if (sticker.getPosition().y + 160 + 160 <= 640)
 					{
-						posX = 10;
-						posY += 120;
+						posX = -5;
+						posY += 160;
 					}
 					else
 					{
@@ -234,6 +292,26 @@ bool SimpleNotes::addSticker()
 	else return false;
 }
 
+Sticker SimpleNotes::loadSticker(json& j)
+{
+	Sticker sticker(j["textStr"].get<std::wstring>(), j["positionX"].get<int>(),
+		j["positionY"].get<int>(), j["strSize"].get_to(strSize), j["str"].get<int>(),
+		j["colorR"].get<int>(), j["colorG"].get<int>(), j["colorB"].get<int>());
+	return sticker;
+}
+
+sf::Text SimpleNotes::loadText(int id)
+{
+	sf::Text text;
+	text.setPosition(stickers[id].getRect().left + 16, stickers[id].getRect().top + 5);
+	text.setFont(font);
+	text.setCharacterSize(9);
+	text.setString(stickers[id].getStr());
+	text.setFillColor(sf::Color::Black);
+
+	return text;
+}
+
 void SimpleNotes::deleteSticker(int id)
 {
 	Sticker* buf = new Sticker[stickerCounter-1];
@@ -257,10 +335,10 @@ void SimpleNotes::edit(int id)
 void SimpleNotes::addText(int id)
 {
 	sf::Text text;
-	text.setPosition(stickers[id].getRect().left, stickers[id].getRect().top);
+	text.setPosition(stickers[id].getRect().left+16, stickers[id].getRect().top + 5);
 	text.setFont(font);
-	text.setCharacterSize(7);
-	text.setString("");
+	text.setCharacterSize(9);
+	text.setString(L"");
 	text.setFillColor(sf::Color::Black);
 
 	if (stickersText == nullptr)
@@ -275,16 +353,35 @@ void SimpleNotes::addText(int id)
 	stickersText = buf;
 }
 
-SimpleNotes::SimpleNotes() : window(sf::VideoMode(400, 600), L"Simple notes ©NewRecon", sf::Style::Close)
+SimpleNotes::SimpleNotes() : window(sf::VideoMode(480, 640), L"Simple notes ©NewRecon", sf::Style::Close)
 {
-	const unsigned char opacity = 200;
-	//setTransparency(window.getSystemHandle(), opacity);
-	this->background.setSize(sf::Vector2f(400, 600));
+	this->background.setSize(sf::Vector2f(480, 640));
 	this->backgroundTexture.loadFromFile("..\\textures\\kisspng-hardwood-wood-stain-varnish-wall-floor-wood-textures-5a811df69cb278.8835756915184112546418.png");
 	background.setTexture(&backgroundTexture);
 	window.setFramerateLimit(60);
 
 	font.loadFromFile("C:/Windows/Fonts/CascadiaMono.ttf");
+
+	std::ifstream in{ path };
+	if (in.is_open())
+	{
+		json j;
+		in >> j;
+		stickerCounter = j["stickerCounter"].get<int>();
+		if (stickerCounter!=0)
+		{
+			stickers = new Sticker[stickerCounter];
+			stickersText = new sf::Text[stickerCounter];
+
+			for (int i = 0; i < stickerCounter; i++)
+			{
+				in >> j;
+				stickers[i] = loadSticker(j);
+				stickersText[i] = loadText(i);
+			}
+		}
+	}
+	in.close();
 }
 
 void SimpleNotes::delText(int id)
@@ -313,7 +410,6 @@ void SimpleNotes::run()
 	while (window.isOpen())
 	{
 		evenState();
-		update();
 		render();
 	}
 }

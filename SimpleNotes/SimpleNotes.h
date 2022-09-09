@@ -3,29 +3,43 @@
 #include "Plus.h"
 #include "Trash.h"
 #include <iostream>
-#include <windows.h>
+
+#include <nlohmann/json.hpp>
+#include <fstream>
+
+#include "ContextMenu.h"
+using namespace nlohmann;
+
 class SimpleNotes
 {
 private:
 	sf::RenderWindow window;
 	sf::Texture backgroundTexture;
 	sf::RectangleShape background;
+
 	Plus plus;
 	Trash trash;
+
 	Sticker* stickers = nullptr;
+
 	sf::Text* stickersText = nullptr;
+	sf::Font font;
 
-	sf::Font font; // для мини текста
+	std::string path = "file.json";
+	int strSize[14] = {}; //для чтения из файла
 
+	ContextMenu* contMenu = nullptr;
 	int stickerCounter = 0;
+	bool menu = false; // Если есть меню, то отрисовать его
+
 	void evenState();
-	void update();
 	void render();
-	bool setTransparency(HWND hWnd, unsigned char alpha);
 	bool addSticker();
+	Sticker loadSticker(json& j);
 	void deleteSticker(int id);
 	void edit(int id);
 	void addText(int id);
+	sf::Text loadText(int id);
 	void delText(int id);
 public:
 	SimpleNotes();

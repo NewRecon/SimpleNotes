@@ -5,13 +5,10 @@ class Button
 {
 protected:
 	sf::Rect<float>* rect;
-	//std::string text;
-	//sf::Font font;
 	float height;
 	float width;
 	int positionX;
 	int positionY;
-	bool status;
 	sf::RectangleShape button;
 	sf::Color color;
 	sf::Texture texture;

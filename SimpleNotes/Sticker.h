@@ -1,31 +1,34 @@
 #pragma once
 #include "SFML/Graphics.hpp"
-#include <fstream>
 #include <iostream>
-using namespace std;
+
+#include <nlohmann/json.hpp>
+#include <fstream>
+using namespace nlohmann;
 
 class Sticker
 {
 private:
 	sf::Rect<float>* rect;
-	sf::String textStr;
+	std::wstring textStr;
 	sf::Text text;
 	sf::Font font;
 	int positionX;
 	int positionY;
-	//std::string path;
 	sf::RectangleShape sticker;
 	sf::Color color;
-	sf::Color outLineColor;
 	sf::Texture textureStick;
 	int strSize[14] = {};
-	int str = 0; //номер строчки
-	std::string intToStr(int num);
+	int str = 0; //номер строчки, где коретка
+
+	std::string path = "file.json";
+
 public:
 	Sticker(){}
 	Sticker(int positionX, int positionY, int id);
+	Sticker(std::wstring textStr, int positionX, int positionY,
+		int strSize[14], int str, int r, int g, int b);
 	Sticker& operator = (const Sticker& other);
-	void create();
 	void edit();
 	sf::RectangleShape getSticker();
 	bool contain(sf::Vector2i coord);
@@ -34,5 +37,7 @@ public:
 	void setPosition(sf::Vector2i);
 	sf::Vector2i getPosition();
 	sf::Text getText();
-	sf::String getStr();
+	std::wstring getStr();
+	void save();
+	void changeColor();
 };
